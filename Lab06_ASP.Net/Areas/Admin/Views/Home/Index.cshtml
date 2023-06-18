@@ -1,0 +1,354 @@
+﻿@{
+    ViewData["Title"] = "Admin Page";
+    Layout = "_Layout";
+}
+<h1>Admin Zone</h1>
+<div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">List Order</h5>
+            </div>
+            <div class="modal-body">
+                <div style="max-height: 200px; overflow-y: auto;">
+                    <table id="orderTable" class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnClose2" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section MODEL_DIALOG {
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit Coffee</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close" id="btn-Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="coffeeForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" class="form-control" id="name" placeholder="Enter coffee name">
+                        </div>
+                        <div class="form-group">
+                            <label for="sPrice">S_Price</label>
+                            <input type="number" class="form-control" id="sPrice" placeholder="Enter small price">
+                        </div>
+                        <div class="form-group">
+                            <label for="lPrice">L_Price</label>
+                            <input type="number" class="form-control" id="lPrice" placeholder="Enter large price">
+                        </div>
+                        <div class="form-group">
+                            <label for="type">Type</label>
+                            <select class="form-control" id="type">
+                                <option value="hot">Hot</option>
+                                <option value="cold">Cold</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="imageFile">Image</label>
+                            <input type="file" class="form-control-file" id="imageFile">
+                            <img id="previewImage" src="#" alt="Preview" style="display: none; max-width: 100px; margin-top: 10px;" />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnClose">Close</button>
+                    <button type="button" class="btn btn-primary" id="btnSave">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@section Coffee_Hot_List{
+    <h3>Coffee Hot:</h3>
+    <div class="coffee_hot coffee-table">
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">Name</th>
+                        <th class="text-center">Small Price</th>
+                        <th class="text-center">Large Price</th>
+                        <th class="text-center">Image</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="coffeeHotTable" class="coffeeHotTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Coffee_Cold_List{
+    <h3>Coffee Cold:</h3>
+    <div class="coffee_cold coffee-table">
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">Name</th>
+                        <th class="text-center">Small Price</th>
+                        <th class="text-center">Large Price</th>
+                        <th class="text-center">Image</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="coffeeColdTable" class="coffeeColdTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+
+@section Script{
+    <script type="text/javascript">
+        var isUpdate = false;
+        var currentId = 0;
+        $(document).ready(function () {
+            showCoffeeList();
+            showOrderList();
+            $("#btnCreateNew").click(function () {
+                isUpdate = false;
+                $("#exampleModalLabel").text("Create new Coffee");
+                $("#btnSave").text("Create");
+                $("#exampleModal").modal("show");
+                console.log("Modal will be shown");
+            });
+
+            $("#btnListOrder").click(function(){
+                $("#exampleModal2").modal("show");
+            });
+
+            $("#imageFile").change(function () {
+                var file = this.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        $("#previewImage").attr("src", e.target.result);
+                        $("#previewImage").show();
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    $("#previewImage").attr("src", "#");
+                    $("#previewImage").hide();
+                }
+            });
+
+            $("#btnClose2").click(function(){
+                $("#exampleModal2").modal("hide");
+            });
+
+            $("#btnClose").click(function (e) {
+                clearModalContent();
+                $("#exampleModal").modal("hide");
+            });
+
+            $("#btn-Close").click(function (e) {
+                $("#exampleModal").modal("hide");
+            });
+
+            $("#btnSave").click(function (e) {
+                e.preventDefault(); // Ngăn chặn hành vi mặc định của nút Save
+                var name = $("#name").val();
+                var s_Price = $("#sPrice").val();
+                var l_Price = $("#lPrice").val();
+                var sPrice = s_Price.replace(".", ",");
+                var lPrice = l_Price.replace(".", ",");
+                var type = $("#type").val();
+                var fileInput = document.getElementById('imageFile');
+                var data = new FormData();
+
+                data.append('Name', name);
+                data.append('S_Price', sPrice);
+                data.append('L_Price', lPrice);
+                data.append('Type', type);
+                if (fileInput.files.length > 0) {
+                    data.append('ImageFile', fileInput.files[0]);
+                }
+                if (!isUpdate) {
+                    $.ajax({
+                        url: '/admin/home/create/',
+                        type: 'POST',
+                        dataType:'json',
+                        data: data,
+                        processData: false, // Không xử lý dữ liệu tự động
+                        contentType: false, // Không đặt lại header Content-Type
+                        success: function (data) {
+                            showCoffeeList();
+                            clearModalContent();
+                            alert("Create success.")
+                        },
+                        error: function (err) {
+                            alert("Error: " + err.responseText);
+                        }
+                    });
+                }
+                else{
+                    data.append('Id', currentId)
+                    $.ajax({
+                        url: '/admin/home/edit/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            console.log(data);
+                            showCoffeeList();
+                            clearModalContent();
+                            alert("Complete change.")
+                        },
+                        error: function (err) {
+                            console.log(data);
+                            alert("Error:" + err.responseText);
+                        }
+                    });
+                }
+            });
+            function clearModalContent() {
+                $("#name").val(""),
+                $("#sPrice").val(""),
+                $("#lPrice").val(""),
+                $("#type").val("Hot"),
+                $("#imageFile").val("");
+                $("#previewImage").attr("src", "#");
+                $("#previewImage").hide();
+            }
+        });
+        function showOrderList() {
+            $('#orderTable tbody').empty();
+
+            $.ajax({
+                url: '/admin/home/listorder',
+                type: 'GET',
+                success: function (data) {
+                    data.forEach(function (order) {
+                        var row = '<tr>' +
+                            '<td>' + order.id + '</td>' +
+                            '<td>' + order.name + '</td>' +
+                            '<td>' + order.message + '</td>' +
+                            '</tr>';
+
+                        $('#orderTable tbody').append(row);
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.log(error);
+                }
+            });
+        }
+        function showCoffeeList() {
+            $(".coffeeColdTable").empty();
+            $(".coffeeHotTable").empty();
+            $.ajax({
+                url: '/admin/home/listcoffee/',
+                type: 'GET',
+                datatype: 'json',
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        var Id = item.id;
+                        var Name = item.name;
+                        var S_Price = item.s_Price;
+                        var L_Price = item.l_Price;
+                        var ImagePath = item.imagePath;
+                        if (item.type == "hot") {
+                            AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, ".coffeeHotTable");
+                        }
+                        if (item.type == "cold") {
+                            AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, ".coffeeColdTable");
+                        }
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+            function AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, classname) {
+                var row = "<tr>";
+                row += "<td class=\"text-center\">" + Id + "</td>";
+                row += "<td class=\"text-center\">" + Name + "</td>";
+                row += "<td class=\"text-center\">" + S_Price + "</td>";
+                row += "<td class=\"text-center\">" + L_Price + "</td>";
+                row += "<td class=\"text-center\">";
+                if (ImagePath) {
+                    row += "<img src=\"/vendor/img/" + ImagePath + "?random=" + Date.now() + "\" alt=\"coffee\" style=\"max-width: 200px; max-height: 200px;\" />";
+                } else {
+                    row += "No image available";
+                }
+                row += "</td>";
+                row += "<td class=\"text-center\"><button type=\"button\" id=\"btnEdit\" class=\"btn btn-info\" data-toggle=\"modal\" data-target=\"#exampleModal\" onclick=\"return GetCoffee(" + Id + ")\">Edit</button></td>";
+                row += "<td class=\"text-center\"><button type=\"button\" id=\"btnDelete\" class=\"btn btn-danger\" onclick=\"return DeleteCoffee(" + Id + ")\">Delete</button></td>";
+                row += "</tr>";
+
+                $(classname).append(row);
+            }
+        }
+
+        function GetCoffee(id){
+            isUpdate = true;
+            currentId = 0;
+            $.ajax({
+                url: '/admin/home/getcoffee/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data)
+                {
+                    console.log(data);
+                    $("#name").val(data.name);
+                    $("#sPrice").val(data.s_Price);
+                    $("#lPrice").val(data.l_Price);
+                    $("#type").val(data.type);
+                    $("#imageFile").val("");
+                    $("#previewImage").attr("src", "/vendor/img/" + data.imagePath + "?random=" + Date.now());
+                    $("#previewImage").show();
+                    $("#exampleModal").modal("show");
+                    currentId = data.id;
+                },
+                error: function (err)
+                {
+                    alert("Error:" + err.responseText);
+                }
+            });
+        }
+        function DeleteCoffee(id) {
+            var confirmed = confirm("Bạn có chắc chắn muốn xóa không?");
+
+            if (confirmed) {
+                $.ajax({
+                    url: '/admin/home/delete/' + id,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function (data) {
+                        showCoffeeList();
+                        alert("Coffee deleted.");
+                    },
+                    error: function (err) {
+                        alert("Error: " + err.responseText);
+                    }
+                });
+            }
+        }
+    </script>
+}
