@@ -3,19 +3,26 @@
     Layout = "_Layout";
 }
 <h1>Admin Zone</h1>
+<input type="text" id="searchBox" placeholder="Search by Name or Id" />
+<button type="button" id="searchButton" onclick="return searchCoffee()" class="btn btn-secondary">Search</button>
 <div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">List Order</h5>
+                <div class="ml-auto">
+                    <input type="text" class="form-control" placeholder="Search by name or id" id="searchBox2">
+                    <button type="button" class="btn btn-default" onclick="return searchOrder()">Tìm kiếm</button>
+                </div>
             </div>
             <div class="modal-body">
-                <div style="max-height: 200px; overflow-y: auto;">
+                <div style="max-height: 600px; overflow-y: auto; overflow-x: auto;">
                     <table id="orderTable" class="table">
                         <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
+                                <th>Phone Number</th>
                                 <th>Message</th>
                             </tr>
                         </thead>
@@ -245,13 +252,12 @@
                 type: 'GET',
                 success: function (data) {
                     data.forEach(function (order) {
-                        var row = '<tr>' +
-                            '<td>' + order.id + '</td>' +
-                            '<td>' + order.name + '</td>' +
-                            '<td>' + order.message + '</td>' +
-                            '</tr>';
-
-                        $('#orderTable tbody').append(row);
+                        var id = order.id;
+                        var name = order.name;
+                        var phonenumber = order.phoneNumber;
+                        var message = order.message;
+                        var type = order.type;
+                        AppendOrder(id, name, phonenumber, message, type);
                     });
                 },
                 error: function (xhr, status, error) {
@@ -259,6 +265,85 @@
                 }
             });
         }
+
+        function searchOrder() {
+            $('#orderTable tbody').empty();
+            var searchTerm = $('#searchBox2').val();
+            $.ajax({
+                url: '/admin/home/getorderbynameorid',
+                type: 'POST',
+                dataType: 'json',
+                data: { result: searchTerm },
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        var Id = item.id;
+                        var Name = item.name;
+                        var Phonenumber = item.phoneNumber;
+                        var Message = item.message;
+                        var Type = item.type;
+                        AppendOrder(Id, Name, Phonenumber, Message, Type);
+                    });
+                    $('#searchBox2').val('');
+                },
+                error: function (err) {
+                    showOrderList();
+                }
+            });
+        }
+
+        function AppendOrder(id, name, phonenumber, message, type)
+        {
+            var row = '<tr';
+            row += '>' +
+                '<td class="' + (type === 'done' ? 'text-success' : (type === 'fail' ? 'text-danger' : '')) + '">' + id + '</td>' +
+                '<td class="' + (type === 'done' ? 'text-success' : (type === 'fail' ? 'text-danger' : '')) + '">' + name + '</td>' +
+                '<td class="' + (type === 'done' ? 'text-success' : (type === 'fail' ? 'text-danger' : '')) + '">' + phonenumber + '</td>' +
+                '<td class="message-cell ' + (type === 'done' ? 'text-success' : (type === 'fail' ? 'text-danger' : '')) + '">' + message + '</td>';
+
+            if (type !== 'done' && type !== 'fail') {
+                row += '<td>' +
+                    '<button type="button" onclick="return markOrderAsDone(' + id + ')" class="btn btn-success">Done</button>' +
+                    '<button type="button" onclick="return markOrderAsFail(' + id + ')" class="btn btn-danger">Fail</button>' +
+                    '</td>';
+            }
+
+            row += '</tr>';
+            $('#orderTable tbody').append(row);
+        }
+        function markOrderAsDone(orderId) {
+            console.log(typeof orderId);
+            $.ajax({
+                url: '/admin/home/markorderasdone/' + orderId,
+                type: 'POST',
+                dataType: 'json',
+                success: function (response) {
+                    alert("Done!");
+                    showOrderList();
+                },
+                error: function (xhr, status, error) {
+                    console.log(orderId);
+                    alert("Fail!");
+                }
+            });
+        }
+
+        function markOrderAsFail(orderId) {
+            console.log(typeof orderId);
+            $.ajax({
+                url: '/admin/home/markorderasfail/' + orderId,
+                type: 'POST',
+                dataType: 'json',
+                success: function (response) {
+                    alert("Done.");
+                    showOrderList();
+                },
+                error: function (xhr, status, error) {
+                    console.log(orderId);
+                    alert("Fail!");
+                }
+            });
+        }
+
         function showCoffeeList() {
             $(".coffeeColdTable").empty();
             $(".coffeeHotTable").empty();
@@ -285,25 +370,25 @@
                     alert("Error: " + err.responseText);
                 }
             });
-            function AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, classname) {
-                var row = "<tr>";
-                row += "<td class=\"text-center\">" + Id + "</td>";
-                row += "<td class=\"text-center\">" + Name + "</td>";
-                row += "<td class=\"text-center\">" + S_Price + "</td>";
-                row += "<td class=\"text-center\">" + L_Price + "</td>";
-                row += "<td class=\"text-center\">";
-                if (ImagePath) {
-                    row += "<img src=\"/vendor/img/" + ImagePath + "?random=" + Date.now() + "\" alt=\"coffee\" style=\"max-width: 200px; max-height: 200px;\" />";
-                } else {
-                    row += "No image available";
-                }
-                row += "</td>";
-                row += "<td class=\"text-center\"><button type=\"button\" id=\"btnEdit\" class=\"btn btn-info\" data-toggle=\"modal\" data-target=\"#exampleModal\" onclick=\"return GetCoffee(" + Id + ")\">Edit</button></td>";
-                row += "<td class=\"text-center\"><button type=\"button\" id=\"btnDelete\" class=\"btn btn-danger\" onclick=\"return DeleteCoffee(" + Id + ")\">Delete</button></td>";
-                row += "</tr>";
-
-                $(classname).append(row);
+        }
+        function AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, classname) {
+            var row = "<tr>";
+            row += "<td class=\"text-center\">" + Id + "</td>";
+            row += "<td class=\"text-center\">" + Name + "</td>";
+            row += "<td class=\"text-center\">" + S_Price + "</td>";
+            row += "<td class=\"text-center\">" + L_Price + "</td>";
+            row += "<td class=\"text-center\">";
+            if (ImagePath) {
+                row += "<img src=\"/vendor/img/" + ImagePath + "?random=" + Date.now() + "\" alt=\"coffee\" style=\"max-width: 200px; max-height: 200px;\" />";
+            } else {
+                row += "No image available";
             }
+            row += "</td>";
+            row += "<td class=\"text-center\"><button type=\"button\" id=\"btnEdit\" class=\"btn btn-info\" data-toggle=\"modal\" data-target=\"#exampleModal\" onclick=\"return GetCoffee(" + Id + ")\">Edit</button></td>";
+            row += "<td class=\"text-center\"><button type=\"button\" id=\"btnDelete\" class=\"btn btn-danger\" onclick=\"return DeleteCoffee(" + Id + ")\">Delete</button></td>";
+            row += "</tr>";
+
+            $(classname).append(row);
         }
 
         function GetCoffee(id){
@@ -349,6 +434,37 @@
                     }
                 });
             }
+        }
+
+        function searchCoffee() {
+            $(".coffeeColdTable").empty();
+            $(".coffeeHotTable").empty();
+            var searchTerm = $('#searchBox').val();
+            $.ajax({
+                url: '/admin/home/getcoffeebynameorid',
+                type: 'POST',
+                dataType: 'json',
+                data: { nameOrId: searchTerm },
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        var Id = item.id;
+                        var Name = item.name;
+                        var S_Price = item.s_Price;
+                        var L_Price = item.l_Price;
+                        var ImagePath = item.imagePath;
+                        if (item.type == "hot") {
+                            AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, ".coffeeHotTable");
+                        }
+                        if (item.type == "cold") {
+                            AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, ".coffeeColdTable");
+                        }
+                    });
+                    $('#searchBox').val('');
+                },
+                error: function (err) {
+                    showCoffeeList();
+                }
+            });
         }
     </script>
 }

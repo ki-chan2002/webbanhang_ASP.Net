@@ -45,3 +45,8 @@ body {
         padding: 10px;
         white-space: nowrap;
     }
+.message-cell {
+    max-width: 200px; /* Đặt kích thước chiều ngang tối đa */
+    word-break: break-word; /* Áp dụng xuống hàng */
+    overflow-x: auto; /* Tạo thanh cuộn ngang */
+}

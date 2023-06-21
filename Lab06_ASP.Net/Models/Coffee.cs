@@ -31,6 +31,9 @@ namespace Lab06_ASP.Net.Models
         public string Email { get; set; }
         [Required]
         public string Message { get; set; }
+        [Required]
+        public string PhoneNumber { get; set; }
+        public string Type { get; set; }
     }
 
     public class MyDBContext : DbContext

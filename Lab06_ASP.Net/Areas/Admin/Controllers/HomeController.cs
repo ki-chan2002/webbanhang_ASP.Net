@@ -1,6 +1,8 @@
 ﻿using Lab06_ASP.Net.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Lab06_ASP.Net.Areas.Admin.Controllers
 {
@@ -21,18 +23,38 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         }
         public IActionResult ListOrder()
         {
-            var order = _dbContext.Orders.ToList();
+            var order = _dbContext.Orders.OrderByDescending(o => o.Id).ToList();
             return Json(order);
         }
+        [HttpPost]
         public IActionResult CreateOrder(Order order)
         {
-            if(ModelState.IsValid)
+            if (ModelState.IsValid)
             {
                 _dbContext.Orders.Add(order);
                 _dbContext.SaveChanges();
                 return Json(order);
             }
             return BadRequest(ModelState);
+        }
+        [HttpPost]
+        public IActionResult GetOrderByNameOrId(string result)
+        {
+            if(result != null)
+            {
+                var order = _dbContext.Orders.Where(e => e.Name.Contains(result) || e.Id.ToString().Contains(result)).ToList();
+                return Json(order);
+            }
+            return BadRequest();
+        }
+        [HttpPost]
+        public IActionResult GetCoffeeByNameOrId(string nameOrId)
+        {   if(nameOrId != null)
+            {
+                var coffees = _dbContext.Coffees.Where(e => e.Name.Contains(nameOrId) || e.Id.ToString().Contains(nameOrId)).ToList();
+                return Json(coffees);
+            }
+            return BadRequest();
         }
         [HttpGet]
         public IActionResult ListCoffee()
@@ -46,6 +68,36 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
             var coffee = _dbContext.Coffees.FirstOrDefault(c => c.Id == id);
             return Json(coffee);
         }
+        [HttpPost]
+        public IActionResult MarkOrderAsDone(int Id)
+        {
+            var order = _dbContext.Orders.FirstOrDefault(c => c.Id == Id);
+            if (order != null)
+            {
+                order.Type = "done";
+                _dbContext.SaveChanges();
+                return Json(new { success = true });
+            }
+            var modelState = new ModelStateDictionary();
+            modelState.AddModelError("", "Lỗi khi đánh dấu đơn hàng là done.");
+            return BadRequest(modelState);
+        }
+
+        [HttpPost]
+        public IActionResult MarkOrderAsFail(int Id)
+        {
+            var order = _dbContext.Orders.FirstOrDefault(c => c.Id == Id);
+            if (order != null)
+            {
+                order.Type = "fail";
+                _dbContext.SaveChanges();
+                return Json(new { success = true });
+            }
+            var modelState = new ModelStateDictionary();
+            modelState.AddModelError("", "Lỗi khi đánh dấu đơn hàng là fail.");
+            return BadRequest(modelState);
+        }
+
 
         [HttpPost]
         public IActionResult Create(Coffee coffee)
