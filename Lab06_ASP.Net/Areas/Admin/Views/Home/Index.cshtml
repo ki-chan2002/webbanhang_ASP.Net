@@ -3,6 +3,7 @@
     Layout = "_Layout";
 }
 <h1>Admin Zone</h1>
+<button type="button" class="btn btn-info" onclick="openReportTab('/admin/report/printcoffee')">Print Coffee List</button>
 <input type="text" id="searchBox" placeholder="Search by Name or Id" />
 <button type="button" id="searchButton" onclick="return searchCoffee()" class="btn btn-secondary">Search</button>
 <div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -33,6 +34,7 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-info" onclick="openReportTab('/admin/report/printorder')">Print Order List</button>
                 <button type="button" id="btnClose2" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -244,6 +246,9 @@
                 $("#previewImage").hide();
             }
         });
+        function openReportTab(url) {
+            window.open(url, '_blank');
+        }
         function showOrderList() {
             $('#orderTable tbody').empty();
 

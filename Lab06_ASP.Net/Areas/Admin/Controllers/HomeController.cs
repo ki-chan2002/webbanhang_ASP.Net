@@ -1,7 +1,6 @@
 ﻿using Lab06_ASP.Net.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Lab06_ASP.Net.Areas.Admin.Controllers
