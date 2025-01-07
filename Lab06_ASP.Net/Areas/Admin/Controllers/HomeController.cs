@@ -18,11 +18,24 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         [Authorize, HttpGet]
         public IActionResult Index()
         {
-            return View();
+            // Lấy danh sách Categories
+            var categories = _dbContext.Categories.ToList();
+
+            // Lấy danh sách Coffees
+            var coffees = _dbContext.Coffees.ToList();
+
+            // Tạo một ViewModel để chứa cả hai danh sách
+            var viewModel = new IndexViewModel
+            {
+                Categories = categories,
+                Coffees = coffees
+            };
+
+            return View(viewModel);
         }
-        public IActionResult ListOrder()
+        public IActionResult ListMessage()
         {
-            var order = _dbContext.Orders.OrderByDescending(o => o.Id).ToList();
+            var order = _dbContext.Messages.OrderByDescending(o => o.MessageID).ToList();
             return Json(order);
         }
         [HttpPost]
@@ -37,11 +50,11 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
             return BadRequest(ModelState);
         }
         [HttpPost]
-        public IActionResult GetOrderByNameOrId(string result)
+        public IActionResult GetMessageByNameOrId(string result)
         {
             if(result != null)
             {
-                var order = _dbContext.Orders.Where(e => e.Name.Contains(result) || e.Id.ToString().Contains(result)).ToList();
+                var order = _dbContext.Messages.Where(e => e.CustomerName.Contains(result) || e.MessageID.ToString().Contains(result)).ToList();
                 return Json(order);
             }
             return BadRequest();
@@ -50,7 +63,7 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         public IActionResult GetCoffeeByNameOrId(string nameOrId)
         {   if(nameOrId != null)
             {
-                var coffees = _dbContext.Coffees.Where(e => e.Name.Contains(nameOrId) || e.Id.ToString().Contains(nameOrId)).ToList();
+                var coffees = _dbContext.Coffees.Where(e => e.CoffeeName.Contains(nameOrId) || e.CoffeeID.ToString().Contains(nameOrId)).ToList();
                 return Json(coffees);
             }
             return BadRequest();
@@ -64,13 +77,13 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetCoffee(int id) 
         {
-            var coffee = _dbContext.Coffees.FirstOrDefault(c => c.Id == id);
+            var coffee = _dbContext.Coffees.FirstOrDefault(c => c.CoffeeID == id);
             return Json(coffee);
         }
         [HttpPost]
         public IActionResult MarkOrderAsDone(int Id)
         {
-            var order = _dbContext.Orders.FirstOrDefault(c => c.Id == Id);
+            var order = _dbContext.Messages.FirstOrDefault(c => c.MessageID == Id);
             if (order != null)
             {
                 order.Type = "done";
@@ -83,9 +96,9 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public IActionResult MarkOrderAsFail(int Id)
+        public IActionResult MarkMessageAsFail(int Id)
         {
-            var order = _dbContext.Orders.FirstOrDefault(c => c.Id == Id);
+            var order = _dbContext.Messages.FirstOrDefault(c => c.MessageID == Id);
             if (order != null)
             {
                 order.Type = "fail";
@@ -115,7 +128,7 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
                     }
                     else
                     {
-                        maxId = _dbContext.Coffees.Max(c => c.Id);
+                        maxId = _dbContext.Coffees.Max(c => c.CoffeeID);
                         filename = "Coffee_" + (maxId + 1) + Path.GetExtension(coffee.ImageFile.FileName);
                     }
         
@@ -139,7 +152,7 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            var coffee = _dbContext.Coffees.FirstOrDefault(c => c.Id == id);
+            var coffee = _dbContext.Coffees.FirstOrDefault(c => c.CoffeeID == id);
             if (coffee != null)
             {
                 // Lấy tên file ảnh từ ImagePath
@@ -160,7 +173,7 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         }
         public IActionResult Get(int id)
         {
-            var coffee = _dbContext.Coffees.ToList().Find(c => c.Id == id);
+            var coffee = _dbContext.Coffees.ToList().Find(c => c.CoffeeID == id);
             return Json(coffee);
         }
         [HttpPost]
@@ -168,13 +181,12 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var existingCoffee = _dbContext.Coffees.FirstOrDefault(c => c.Id == coffee.Id);
+                var existingCoffee = _dbContext.Coffees.FirstOrDefault(c => c.CoffeeID == coffee.CoffeeID);
                 if (existingCoffee != null)
                 {
-                    existingCoffee.Name = coffee.Name;
+                    existingCoffee.CoffeeName = coffee.CoffeeName;
                     existingCoffee.S_Price = coffee.S_Price;
                     existingCoffee.L_Price = coffee.L_Price;
-                    existingCoffee.Type = coffee.Type;
 
                     if (coffee.ImageFile != null)
                     {
@@ -187,7 +199,7 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
                         }
 
                         // Đổi tên và lưu ảnh mới
-                        string newFilename = "Coffee_" + existingCoffee.Id + Path.GetExtension(coffee.ImageFile.FileName);
+                        string newFilename = "Coffee_" + existingCoffee.CoffeeID + Path.GetExtension(coffee.ImageFile.FileName);
                         string newPhysicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/vendor/img", newFilename);
                         using (var stream = new FileStream(newPhysicalPath, FileMode.Create))
                         {

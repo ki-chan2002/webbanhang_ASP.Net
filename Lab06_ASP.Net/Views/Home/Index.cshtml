@@ -16,14 +16,9 @@
     <link rel="stylesheet" href="/vendor/css/all.min.css"> <!-- fontawesome -->
     <link rel="stylesheet" href="/vendor/css/tailwind.css">
     <link rel="stylesheet" href="/vendor/css/tooplate-antique-cafe.css">
+    <link rel="stylesheet" href="/css/tooltip.css">
     
-<!--
 
-Tooplate 2126 Antique Cafe
-
-https://www.tooplate.com/view/2126-antique-cafe
-
--->
 </head>
 <body>    
     <!-- Intro -->
@@ -47,7 +42,11 @@ https://www.tooplate.com/view/2126-antique-cafe
                 </div>    
                 <div class="bg-black bg-opacity-70 p-10 mb-5">
                     <p class="text-white leading-8 text-sm font-light">
-                        This is a ASP.Net core 7.0 web application project about coffee shop using AJAX and template named Antique Cafe which is a parallax HTML5 template with a good responsiveness.
+                        Báo cáo đồ án cuồi kỳ môn "Thiết kế web" của nhóm "Thiết kế web".
+                        <br>
+                        Dự án xây dựng Coffee Shop sử dụng AJAX dựa trên ASP.net Core.
+                        </br>
+                    </p>
                 </div>
                 <div class="text-center">
                     <div class="inline-block">
@@ -70,34 +69,22 @@ https://www.tooplate.com/view/2126-antique-cafe
                 <div class="flex-1 m-5 rounded-xl px-4 py-6 sm:px-8 sm:py-10 tm-bg-brown tm-item-container">
                     @foreach (var coffee in Model)
                     {
-                        if (coffee.Type == "hot")
                         {
                             <div class="flex items-start mb-6 tm-menu-item">
-                                <img src="/vendor/img/@coffee.ImagePath" alt="Image" class="rounded-md">
+                                <img src="/vendor/img/@coffee.ImagePath" alt="Image" class="rounded-md" style="max-height: 100px; max-width:100px">
                                 <div class="ml-3 sm:ml-6">
-                                    <h3 class="text-lg sm:text-xl mb-2 sm:mb-3 tm-text-yellow">@coffee.Name</h3>
+                                    <h3 class="text-lg sm:text-xl mb-2 sm:mb-3 tm-text-yellow">@coffee.CoffeeName</h3>
                                     <div class="text-white text-md sm:text-lg font-light mb-1">Small: $@coffee.S_Price</div>
                                     <div class="text-white text-md sm:text-lg font-light">Large: $@coffee.L_Price</div>
+                                    <div class="description-box hidden">
+                                        @coffee.Description
+                                    </div>
                                 </div>
                             </div>
                         }
                     }
                 </div>
                 <div class="flex-1 m-5 rounded-xl px-4 py-6 sm:px-8 sm:py-10 tm-bg-brown tm-item-container">
-                    @foreach (var coffee in Model)
-                    {
-                        if (coffee.Type == "cold")
-                        {
-                            <div class="flex items-start justify-end mb-6 tm-menu-item-2">
-                                <div class="text-right mr-6">
-                                    <h3 class="text-lg sm:text-xl mb-2 sm:mb-3 tm-text-yellow">@coffee.Name</h3>
-                                    <div class="text-white text-md sm:text-lg font-light mb-1">Small: $@coffee.S_Price</div>
-                                    <div class="text-white text-md sm:text-lg font-light">Large: $@coffee.L_Price</div>
-                                </div>
-                                <img src="/vendor/img/@coffee.ImagePath" alt="Image" class="rounded-md">
-                            </div>
-                        }
-                    }
                 </div>
             </div>
         </div>        

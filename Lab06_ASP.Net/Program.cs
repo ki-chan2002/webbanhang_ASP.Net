@@ -1,6 +1,7 @@
 using Lab06_ASP.Net.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var Configuration = new ConfigurationBuilder()
@@ -12,10 +13,14 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<MyDBContext>(options =>
     options.UseSqlServer(Configuration.GetConnectionString("MyDBConnection")));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(Configuration.GetConnectionString("DBConnection")));
+    options.UseSqlServer(Configuration.GetConnectionString("MyDBConnection")));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+});
 builder.Services.AddSession();
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())

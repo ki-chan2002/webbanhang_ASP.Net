@@ -1,0 +1,27 @@
+﻿.tm-menu-item {
+    position: relative;
+}
+
+.description-box {
+    position: absolute;
+    top: 100%; /* Hiển thị bên dưới phần item */
+    left: 0;
+    background: rgba(0, 0, 0, 0.8); /* Nền đen mờ */
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px;
+    display: none; /* Ẩn mặc định */
+    z-index: 100;
+}
+
+.tm-menu-item:hover .description-box {
+    display: block; /* Hiển thị khi hover */
+}
+
+.description-box {
+    width: auto;
+    max-width: 90%; /* Đảm bảo không vượt quá màn hình */
+    word-wrap: break-word;
+}
+

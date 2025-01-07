@@ -23,7 +23,7 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
             using (var context = _dbContext)
             {
                 var coffees = context.Coffees.ToList();
-                var reportPath = "D:\\School\\File Visual Studio\\Lab06_ASP.Net\\ReportsApplication1\\Coffee Report.rdlc"; // Đường dẫn tới file template báo cáo RDLC
+                var reportPath = "D:\\File Visual Studio\\DoAnCuoiKy\\ReportsApplication1\\Coffee Report.rdlc"; // Đường dẫn tới file template báo cáo RDLC
 
                 var localReport = new LocalReport(reportPath);
                 localReport.AddDataSource("DataSet1", coffees); // DataSet1 là tên dataset được định nghĩa trong file RDLC
@@ -38,7 +38,7 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
             using (var context = _dbContext)
             {
                 var orders = context.Orders.ToList();
-                var reportPath = "D:\\School\\File Visual Studio\\Lab06_ASP.Net\\ReportsApplication1\\Order Report.rdlc"; // Đường dẫn tới file template báo cáo RDLC
+                var reportPath = "D:\\File Visual Studio\\DoAnCuoiKy\\ReportsApplication1\\Order Report.rdlc"; // Đường dẫn tới file template báo cáo RDLC
 
                 var localReport = new LocalReport(reportPath);
                 localReport.AddDataSource("DataSet2", orders); // DataSet1 là tên dataset được định nghĩa trong file RDLC

@@ -40,12 +40,13 @@
         </div>
     </div>
 </div>
+
 @section MODEL_DIALOG {
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Edit Coffee</h5>
+                    <h5 class="modal-title" id="exampleModalLabel"></h5>
                     <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close" id="btn-Close"></button>
                 </div>
                 <div class="modal-body">
@@ -62,16 +63,48 @@
                             <label for="lPrice">L_Price</label>
                             <input type="number" class="form-control" id="lPrice" placeholder="Enter large price">
                         </div>
+
                         <div class="form-group">
-                            <label for="type">Type</label>
-                            <select class="form-control" id="type">
-                                <option value="hot">Hot</option>
-                                <option value="cold">Cold</option>
-                            </select>
+                            <label for="description">Description</label>
+                            <textarea class="form-control" id="description" placeholder="Enter description" style="max-height:300px; overflow-y:hidden; resize: vertical;"></textarea>
                         </div>
+
+                        <div class="form-group">
+                            <label for="categoryId">Category</label>
+                            <select class="form-control" id="categoryId" name="categoryId" style="margin-bottom: 10px; height: auto; max-height: 100px; overflow-x: hidden; border: 1px solid #ccc;">
+\                                @foreach (var categories in Model)
+                                {
+                                    <option value="@categories.CategoryID">@categories.CategoryName</option>
+                                }
+                            </select>
+                            <i class="fas fa-plus" id="addCategoryIcon" style="cursor: pointer; margin-left: 5px;" title="Add Category"></i>
+                            <i class="fas fa-edit" id="editCategoryIcon" style="cursor: pointer; margin-left: 10px;" onclick="openEditModal()"></i>
+                        </div>
+
+                        <div id="addCategoryForm" style="display: none; margin-top: 10px;">
+                            @* Form thêm mới *@
+                            <div class="form-group">
+                                <label for="newCategoryName">Tên Category mới:</label>
+                                <input type="text" class="form-control" id="newCategoryName" name="CategoryName" style="margin-bottom:10px" />
+                            </div>
+                            <button type="button" id="saveNewCategory" class="btn btn-primary">Lưu</button>
+                            <button type="button" id="cancelAdd" class="btn btn-secondary">Hủy</button>
+                        </div>
+
+                        <div id="editCategoryForm" style="display: none; margin-top: 10px;">
+                            @* Form chỉnh sửa *@
+                            <input type="hidden" id="editCategoryId" name="CategoryId" />
+                            <div class="form-group">
+                                <label for="editCategoryName">Tên Category:</label>
+                                <input type="text" class="form-control" id="editCategoryName" name="CategoryName" style="margin-bottom:10px"/>
+                            </div>
+                            <button type="button" id="saveEdit" class="btn btn-primary">Lưu</button>
+                            <button type="button" id="cancelEdit" class="btn btn-secondary">Hủy</button>
+                        </div>
+                        <div id="message" style="margin-top: 10px;"></div>
                         <div class="form-group">
                             <label for="imageFile">Image</label>
-                            <input type="file" class="form-control-file" id="imageFile">
+                            <input type="file" class="form-control-file" id="imageFile"/>
                             <img id="previewImage" src="#" alt="Preview" style="display: none; max-width: 100px; margin-top: 10px;" />
                         </div>
                     </form>
@@ -84,9 +117,9 @@
         </div>
     </div>
 }
-@section Coffee_Hot_List{
-    <h3>Coffee Hot:</h3>
-    <div class="coffee_hot coffee-table">
+@section Coffee_Table{
+    <h3>Coffee List:</h3>
+    <div class="coffee-table">
         <div class="table-wrapper">
             <table class="table">
                 <thead>
@@ -95,41 +128,100 @@
                         <th class="text-center">Name</th>
                         <th class="text-center">Small Price</th>
                         <th class="text-center">Large Price</th>
+                        <th class="text-center">Category</th>
+                        <th class="text-center">Description</th>
                         <th class="text-center">Image</th>
                         <th class="text-center">Edit</th>
                         <th class="text-center">Delete</th>
                     </tr>
                 </thead>
-                <tbody id="coffeeHotTable" class="coffeeHotTable">
+                <tbody id="CoffeeTable" class="CoffeeTable">
                 </tbody>
             </table>
         </div>
     </div>
 }
 
-@section Coffee_Cold_List{
-    <h3>Coffee Cold:</h3>
-    <div class="coffee_cold coffee-table">
-        <div class="table-wrapper">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th class="text-center">ID</th>
-                        <th class="text-center">Name</th>
-                        <th class="text-center">Small Price</th>
-                        <th class="text-center">Large Price</th>
-                        <th class="text-center">Image</th>
-                        <th class="text-center">Edit</th>
-                        <th class="text-center">Delete</th>
-                    </tr>
-                </thead>
-                <tbody id="coffeeColdTable" class="coffeeColdTable">
-                </tbody>
-            </table>
-        </div>
-    </div>
-}
 
+
+<script>
+     $(document).ready(function () {
+        $('#addCategoryIcon').click(function () {
+            $('#addCategoryForm').show();
+            $('#editCategoryForm').hide();
+            $('#message').empty();
+        });
+
+        $('#editCategoryIcon').click(function () {
+            var selectedCategoryId = $('#CategoryId').val();
+            if (selectedCategoryId === "" || selectedCategoryId === "new") {
+                alert("Vui lòng chọn một category để chỉnh sửa.");
+                return;
+            }
+            var selectedCategoryName = $('#CategoryId option:selected').text();
+            $('#editCategoryId').val(selectedCategoryId);
+            $('#editCategoryName').val(selectedCategoryName);
+            $('#editCategoryForm').show();
+            $('#addCategoryForm').hide();
+            $('#message').empty();
+        });
+
+        $('#cancelAdd').click(function () {
+            $('#addCategoryForm').hide();
+        });
+
+        $('#cancelEdit').click(function () {
+            $('#editCategoryForm').hide();
+        });
+
+        $('#saveNewCategory').click(function () {
+            var newCategoryName = $('#newCategoryName').val();
+            $.ajax({
+                url: 'Admin/Categories/AddNewCategory',
+                type: 'POST',
+                data: { categoryName: newCategoryName },
+                success: function (result) {
+                    if (result.success) {
+                        $('#message').html('<div class="alert alert-success">Category đã được thêm.</div>');
+                        $('#addCategoryForm').hide();
+                        $('#newCategoryName').val("");
+                        $('#CategoryId').append($('<option>', {
+                            value: result.newCategoryId,
+                            text: result.newCategoryName
+                        }));
+                    } else {
+                        $('#message').html('<div class="alert alert-danger">' + result.message + '</div>');
+                    }
+                },
+                error: function () {
+                    $('#message').html('<div class="alert alert-danger">Lỗi khi thêm category.</div>');
+                }
+            });
+        });
+
+        $('#saveEdit').click(function () {
+            var categoryId = $('#editCategoryId').val();
+            var newCategoryName = $('#editCategoryName').val();
+            $.ajax({
+                url: 'Admin/Categories/EditCategory',
+                type: 'POST',
+                data: { categoryId: categoryId, categoryName: newCategoryName },
+                success: function (result) {
+                    if (result.success) {
+                        $('#message').html('<div class="alert alert-success">Category đã được cập nhật.</div>');
+                        $('#editCategoryForm').hide();
+                        $('#CategoryId option:selected').text(newCategoryName);
+                    } else {
+                        $('#message').html('<div class="alert alert-danger">' + result.message + '</div>');
+                    }
+                },
+                error: function () {
+                    $('#message').html('<div class="alert alert-danger">Lỗi khi cập nhật category.</div>');
+                }
+            });
+        });
+    });
+</script>
 
 @section Script{
     <script type="text/javascript">
@@ -140,10 +232,9 @@
             showOrderList();
             $("#btnCreateNew").click(function () {
                 isUpdate = false;
-                $("#exampleModalLabel").text("Create new Coffee");
+                $("#exampleModalLabel").text("Create New Coffee");
                 $("#btnSave").text("Create");
                 $("#exampleModal").modal("show");
-                console.log("Modal will be shown");
             });
 
             $("#btnListOrder").click(function(){
@@ -170,7 +261,10 @@
             });
 
             $("#btnClose").click(function (e) {
-                clearModalContent();
+                $("#message").empty();
+                $('#coffeeForm')[0].reset();
+                $("#previewImage").attr("src", "#");
+                $("#previewImage").hide();
                 $("#exampleModal").modal("hide");
             });
 
@@ -179,72 +273,67 @@
             });
 
             $("#btnSave").click(function (e) {
-                e.preventDefault(); // Ngăn chặn hành vi mặc định của nút Save
-                var name = $("#name").val();
-                var s_Price = $("#sPrice").val();
-                var l_Price = $("#lPrice").val();
-                var sPrice = s_Price.replace(".", ",");
-                var lPrice = l_Price.replace(".", ",");
-                var type = $("#type").val();
-                var fileInput = document.getElementById('imageFile');
-                var data = new FormData();
+                e.preventDefault(); // Ngăn chặn submit form mặc định
 
-                data.append('Name', name);
-                data.append('S_Price', sPrice);
-                data.append('L_Price', lPrice);
-                data.append('Type', type);
-                if (fileInput.files.length > 0) {
-                    data.append('ImageFile', fileInput.files[0]);
+                var formData = new FormData();
+                formData.append('CoffeeName', $('#name').val());
+                formData.append('S_Price', $('#sPrice').val());
+                formData.append('L_Price', $('#lPrice').val());
+                formData.append('Description', $('#description').val());
+                formData.append('CategoryID', $('#categoryId').val());
+                var imageFile = $('#imageFile')[0].files[0];
+                if (imageFile) {
+                    formData.append('ImageFile', imageFile);
                 }
                 if (!isUpdate) {
                     $.ajax({
-                        url: '/admin/home/create/',
+                        url: '/Admin/Coffees/CreateCoffee', // Đường dẫn đến action Create
                         type: 'POST',
-                        dataType:'json',
-                        data: data,
-                        processData: false, // Không xử lý dữ liệu tự động
-                        contentType: false, // Không đặt lại header Content-Type
-                        success: function (data) {
-                            showCoffeeList();
-                            clearModalContent();
-                            alert("Create success.")
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function (result) {
+                            if (result.success) {
+                                $('#ExampleModal').modal('hide'); // Đóng modal
+                                // Reset form sau khi thành công
+                                $('#coffeeForm')[0].reset();
+                                $("#previewImage").attr("src", "#");
+                                $("#previewImage").hide();
+                                showCoffeeList();
+                            } else {
+                                $('#message').html('<div class="alert alert-danger">' + result.message + '</div>');
+                            }
                         },
-                        error: function (err) {
-                            alert("Error: " + err.responseText);
+                        error: function (xhr, status, error) {
+                            console.error("Lỗi AJAX:", status, error, xhr.responseText);
+                            $('#message').html('<div class="alert alert-danger">Lỗi khi thêm cà phê.</div>');
                         }
                     });
                 }
                 else{
-                    data.append('Id', currentId)
+                    formData.append('CoffeeID', currentId)
                     $.ajax({
-                        url: '/admin/home/edit/',
+                        url: '/Admin/Coffees/EditCoffee',
                         type: 'POST',
-                        dataType: 'json',
-                        data: data,
+                        data: formData,
                         processData: false,
                         contentType: false,
-                        success: function (data) {
-                            console.log(data);
-                            showCoffeeList();
-                            clearModalContent();
-                            alert("Complete change.")
+                        success: function (result) {
+                            if(result.success){
+                                $('#message').html('<div class="alert alert-success">Coffee đã được cập nhật.</div>');
+                                showCoffeeList();
+                            } else {
+                                $('#message').html('<div class="alert alert-danger">' + result.message + '</div>');
+                            }
                         },
-                        error: function (err) {
-                            console.log(data);
-                            alert("Error:" + err.responseText);
+                        error: function (xhr, status, error) {
+                           console.error("Lỗi AJAX:", status, error, xhr.responseText);
+                            $('#message').html('<div class="alert alert-danger">Lỗi khi cập nhật cà phê.</div>');
                         }
                     });
                 }
             });
-            function clearModalContent() {
-                $("#name").val(""),
-                $("#sPrice").val(""),
-                $("#lPrice").val(""),
-                $("#type").val("Hot"),
-                $("#imageFile").val("");
-                $("#previewImage").attr("src", "#");
-                $("#previewImage").hide();
-            }
+         
         });
         function openReportTab(url) {
             window.open(url, '_blank');
@@ -350,25 +439,21 @@
         }
 
         function showCoffeeList() {
-            $(".coffeeColdTable").empty();
-            $(".coffeeHotTable").empty();
+            $(".CoffeeTable").empty();
             $.ajax({
-                url: '/admin/home/listcoffee/',
+                url: '/Admin/Coffees/ShowCoffeeList/',
                 type: 'GET',
                 datatype: 'json',
                 success: function (data) {
                     $.each(data, function (i, item) {
-                        var Id = item.id;
-                        var Name = item.name;
-                        var S_Price = item.s_Price;
-                        var L_Price = item.l_Price;
-                        var ImagePath = item.imagePath;
-                        if (item.type == "hot") {
-                            AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, ".coffeeHotTable");
-                        }
-                        if (item.type == "cold") {
-                            AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, ".coffeeColdTable");
-                        }
+                    var Id = item.coffeeID;
+                    var Name = item.coffeeName;
+                    var S_Price = item.s_Price;
+                    var L_Price = item.l_Price;
+                    var Description = item.description;
+                    var Category = item.category ? item.category.categoryName : "Không có danh mục"; // Kiểm tra null
+                    var ImagePath = item.imagePath;
+                    AppendNewCoffee(Id, Name, S_Price, L_Price, Description, Category, ImagePath, ".CoffeeTable");
                     });
                 },
                 error: function (err) {
@@ -376,12 +461,14 @@
                 }
             });
         }
-        function AppendNewCoffee(Id, Name, S_Price, L_Price, ImagePath, classname) {
+        function AppendNewCoffee(Id, Name, S_Price, L_Price, Description, Category, ImagePath, classname) {
             var row = "<tr>";
             row += "<td class=\"text-center\">" + Id + "</td>";
             row += "<td class=\"text-center\">" + Name + "</td>";
             row += "<td class=\"text-center\">" + S_Price + "</td>";
             row += "<td class=\"text-center\">" + L_Price + "</td>";
+            row += "<td class=\"text-center\">" + Category + "</td>";
+            row += "<td class=\"text-center\">" + Description + "</td>";
             row += "<td class=\"text-center\">";
             if (ImagePath) {
                 row += "<img src=\"/vendor/img/" + ImagePath + "?random=" + Date.now() + "\" alt=\"coffee\" style=\"max-width: 200px; max-height: 200px;\" />";
@@ -400,24 +487,31 @@
             isUpdate = true;
             currentId = 0;
             $.ajax({
-                url: '/admin/home/getcoffee/' + id,
+                url: '/Admin/Coffees/GetCoffee/' + id,
                 type: 'GET',
                 dataType: 'json',
                 success: function(data)
                 {
-                    console.log(data);
-                    $("#name").val(data.name);
-                    $("#sPrice").val(data.s_Price);
-                    $("#lPrice").val(data.l_Price);
-                    $("#type").val(data.type);
-                    $("#imageFile").val("");
-                    $("#previewImage").attr("src", "/vendor/img/" + data.imagePath + "?random=" + Date.now());
-                    $("#previewImage").show();
-                    $("#exampleModal").modal("show");
-                    currentId = data.id;
+                    if(data)
+                    {
+                        $("#name").val(data.coffeeName);
+                        $("#sPrice").val(data.s_Price);
+                        $("#lPrice").val(data.l_Price);
+                        $("#category").val(data.categoryID);
+                        $("#description").val(data.description);
+                        $("#category").val(data.categoryID);
+                        $("#imageFile").val("");
+                        $("#previewImage").attr("src", "/vendor/img/" + data.imagePath + "?random=" + Date.now());
+                        $("#previewImage").show();
+                        $("#exampleModal").modal("show");
+                        currentId = data.coffeeID;
+                    } else {
+                        alert("Không tìm thấy dữ liệu cà phê.");
+                    }
                 },
                 error: function (err)
                 {
+                    console.error("Lỗi AJAX:", err);
                     alert("Error:" + err.responseText);
                 }
             });
@@ -427,12 +521,13 @@
 
             if (confirmed) {
                 $.ajax({
-                    url: '/admin/home/delete/' + id,
+                    url: '/Admin/Coffees/DeleteCoffee/' + id,
                     type: 'POST',
                     dataType: 'json',
                     success: function (data) {
-                        showCoffeeList();
-                        alert("Coffee deleted.");
+                        if(data.success){
+                            showCoffeeList();
+                        }
                     },
                     error: function (err) {
                         alert("Error: " + err.responseText);
@@ -471,5 +566,6 @@
                 }
             });
         }
+
     </script>
 }
