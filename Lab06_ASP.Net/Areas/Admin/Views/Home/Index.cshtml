@@ -10,20 +10,21 @@
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">List Order</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Messages</h5>
                 <div class="ml-auto">
                     <input type="text" class="form-control" placeholder="Search by name or id" id="searchBox2">
-                    <button type="button" class="btn btn-default" onclick="return searchOrder()">Tìm kiếm</button>
+                    <button type="button" class="btn btn-default" onclick="return searchMessage()">Tìm kiếm</button>
                 </div>
             </div>
             <div class="modal-body">
                 <div style="max-height: 600px; overflow-y: auto; overflow-x: auto;">
-                    <table id="orderTable" class="table">
+                    <table id="messageTable" class="table">
                         <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Phone Number</th>
+                                <th>Email</th>
                                 <th>Message</th>
                             </tr>
                         </thead>
@@ -34,7 +35,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" onclick="openReportTab('/admin/report/printorder')">Print Order List</button>
+                <button type="button" class="btn btn-info" onclick="openReportTab('/admin/report/printorder')">Print Messsage List</button>
                 <button type="button" id="btnClose2" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -339,21 +340,18 @@
             window.open(url, '_blank');
         }
         function showMessageList() {
-            $("#orderTable tbody").empty();
+            $("#messageTable tbody").empty();
 
             $.ajax({
                 url: "/Admin/Messages/ShowMessageList", // Kiểm tra lại URL này
                 type: "GET",
                 dataType: "json", // Bắt buộc để jQuery tự động parse JSON
                 success: function (data) {
-                    if (data) { // Kiểm tra data có tồn tại và có dữ liệu
-                        console.log(data);
-                        $.each(data, function (index, msg) { // Sử dụng $.each() hoặc data.forEach() đều được
-                            AppendOrder(msg);
-                        });
+                    if (data && data.$values && Array.isArray(data.$values)) { // Kiểm tra data có tồn tại và có dữ liệu
+                        data.$values.forEach(AppendMessage);
                     } else {
                         // Xử lý trường hợp không có dữ liệu
-                        $("#orderTable tbody").append("<tr><td colspan='5'>No messages found.</td></tr>");
+                        $("#messageTable tbody").append("<tr><td colspan='5'>No messages found.</td></tr>");
                     }
                 },
                 error: function (xhr, status, error) {
@@ -367,104 +365,55 @@
             });
         }
 
-        function searchOrder() {
-            $('#orderTable tbody').empty();
-            var searchTerm = $('#searchBox2').val();
-            $.ajax({
-                url: '/admin/home/getorderbynameorid',
-                type: 'POST',
-                dataType: 'json',
-                data: { result: searchTerm },
-                success: function (data) {
-                    $.each(data, function (i, item) {
-                        var Id = item.id;
-                        var Name = item.name;
-                        var Phonenumber = item.phoneNumber;
-                        var Message = item.message;
-                        var Type = item.type;
-                        AppendOrder(Id, Name, Phonenumber, Message, Type);
-                    });
-                    $('#searchBox2').val('');
-                },
-                error: function (err) {
-                    showMessageList();
-                }
-            });
-        }
+        function searchMessage() {
+            $('#messageTable tbody').empty(); // Xóa nội dung bảng trước khi hiển thị kết quả tìm kiếm
+            let searchTerm = $('#searchBox2').val();
 
-         function AppendOrder(order) { // Nhận vào object order thay vì các tham số riêng lẻ
-            let row = `
-                <tr>
-                    <td class="${order.type === 'done' ? 'text-success' : (order.type === 'fail' ? 'text-danger' : '')}">${String(order.messageID)}</td>
-                    <td class="${order.type === 'done' ? 'text-success' : (order.type === 'fail' ? 'text-danger' : '')}">${String(order.customerName)}</td>
-                    <td class="${order.type === 'done' ? 'text-success' : (order.type === 'fail' ? 'text-danger' : '')}">${String(order.customerPhoneNumber)}</td>
-                    <td class="message-cell ${order.type === 'done' ? 'text-success' : (order.type === 'fail' ? 'text-danger' : '')}">${String(order.description)}</td>
-            `;
-
-            if (order.type !== 'done' && order.type !== 'fail') {
-                row += `
-                    <td>
-                        <button class="btn btn-success btn-sm mark-done" data-id="${order.messageID}">Done</button>
-                        <button class="btn btn-danger btn-sm mark-fail" data-id="${order.messageID}">Fail</button>
-                    </td>
-                `;
+            if (searchTerm.trim() === "") { // Kiểm tra nếu ô tìm kiếm rỗng
+                alert("Vui lòng nhập từ khóa tìm kiếm.");
+                showMessageList();//Hiển thị lại toàn bộ message
+                return;
             }
 
-            row += `</tr>`;
-            $('#orderTable tbody').append(row);
-
-            // Gắn sự kiện click cho nút "Done" và "Fail" sau khi append vào bảng
-            $('.mark-done').off('click').on('click', function() {
-                var orderId = $(this).data('id');
-                markOrderAsDone(orderId);
-            });
-
-            $('.mark-fail').off('click').on('click', function() {
-                var orderId = $(this).data('id');
-                markOrderAsFail(orderId);
-            });
-        }
-
-        function markOrderAsDone(orderId) {
-            console.log("Marking order as done:", orderId); // Log rõ ràng hơn
             $.ajax({
-                url: '/Admin/Messages/MarkMessageAsDone/' + orderId,
+                url: '/Admin/Messages/SearchMessageByNameOrID',
                 type: 'POST',
                 dataType: 'json',
-                success: function (response) {
-                    console.log("Order marked as done successfully:", response); // Log response từ server
-                    showMessageList(); // Gọi hàm cập nhật danh sách
+                data: { searchTerm: searchTerm }, // Đổi tên 'result' thành 'searchTerm' cho rõ ràng
+                success: function (data) {
+                    if (data && data.$values && Array.isArray(data.$values)) { // Kiểm tra dữ liệu trả về có tồn tại và có phần tử
+                        data.$values.forEach(function (message) {
+                            AppendMessage(message);
+                        });
+                    } else {
+                        $('#messageTable tbody').append('<tr><td colspan="5" class="text-center">Không tìm thấy kết quả.</td></tr>');
+                    }
                 },
                 error: function (xhr, status, error) {
-                    console.error("Error marking order as done:", xhr, status, error); // Log chi tiết lỗi
-                    alert("An error occurred while marking the order as done."); // Thông báo lỗi chung
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        alert(xhr.responseJSON.message); // Hiển thị thông báo lỗi từ server (nếu có)
-                    }
+                    console.error("Lỗi khi tìm kiếm tin nhắn:", xhr, status, error);
+                    alert("Đã có lỗi xảy ra trong quá trình tìm kiếm.");
+                    showMessageList();//Hiển thị lại toàn bộ message
+                },
+                complete: function(){
+                    $('#searchBox2').val(''); // Xóa nội dung ô tìm kiếm sau khi hoàn thành
                 }
             });
         }
 
-        function markOrderAsFail(orderId) {
-            console.log("Marking order as fail:", orderId); // Log rõ ràng hơn
-            $.ajax({
-                url: '/Admin/Messages/MarkMessageAsFail/' + orderId,
-                type: 'POST',
-                dataType: 'json',
-                success: function (response) {
-                    console.log("Order marked as fail successfully:", response); // Log response từ server
-                    showMessageList(); // Gọi hàm cập nhật danh sách
-                },
-                error: function (xhr, status, error) {
-                    console.error("Error marking order as fail:", xhr, status, error); // Log chi tiết lỗi
-                    alert("An error occurred while marking the order as fail.");
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        alert(xhr.responseJSON.message); // Hiển thị thông báo lỗi từ server (nếu có)
-                    }
-                }
-            });
+        function AppendMessage(message) {
+            let row = `<tr>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.messageID}</td>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.customerName}</td>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.customerPhoneNumber}</td>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.customerEmail}</td>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.description}</td>
+                           
+                       </tr>`;
+            $('#messageTable tbody').append(row);
+
         }
 
+ 
         function showCoffeeList() {
             $(".CoffeeTable").empty();
             $.ajax({
@@ -564,8 +513,6 @@
         }
 
         function searchCoffee() {
-            $(".coffeeColdTable").empty();
-            $(".coffeeHotTable").empty();
             var searchTerm = $('#searchBox').val();
             $.ajax({
                 url: '/admin/home/getcoffeebynameorid',

@@ -161,10 +161,9 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         {
             try
             {
+
                 var messages = await _context.Messages.ToListAsync(); // Lấy danh sách Messages từ database
-                var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, ReferenceHandler = ReferenceHandler.IgnoreCycles };
-                var json = JsonSerializer.Serialize(messages, options);
-                return Content(json, "application/json");
+                return Json(messages);
             }
             catch (System.Exception ex)
             {
@@ -186,48 +185,30 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> MarkMessageAsDone(int MessageID)
+        public async Task<IActionResult> SearchMessageByNameOrID([FromForm] string searchTerm) // Nhận searchTerm từ form
         {
+            if (string.IsNullOrEmpty(searchTerm))
+            {
+                return BadRequest(new { message = "Vui lòng nhập từ khóa tìm kiếm." });
+            }
+
             try
             {
-                var message = await _context.Messages.FindAsync(MessageID); // Tìm message theo ID
-                if (message == null)
+                var messages = await _context.Messages
+                    .Where(m => m.CustomerName.Contains(searchTerm) || m.MessageID.ToString().Contains(searchTerm))
+                    .ToListAsync();
+
+                if (messages == null || messages.Count == 0)
                 {
-                    return NotFound(new { message = "Message not found." }); // Trả về 404 nếu không tìm thấy
+                    return Ok(new List<object>()); // Trả về mảng rỗng nếu không tìm thấy
                 }
-
-                // Thực hiện logic đánh dấu là đã hoàn thành
-                // Ví dụ: message.Status = "Done";
-                message.Type = "Done";
-
-                await _context.SaveChangesAsync();
-                return Ok(new { message = "Message marked as done successfully." }); // Trả về 200 OK với thông báo
+                return Ok(messages); // Trả về kết quả tìm kiếm
             }
             catch (System.Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while marking the message as done: " + ex.Message }); // Trả về 500 Internal Server Error với thông báo lỗi
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> MarkMessageAsFail(int MessageID)
-        {
-            try
-            {
-                var message = await _context.Messages.FindAsync(MessageID);
-                if (message == null)
-                {
-                    return NotFound(new { message = "Message not found." });
-                }
-
-                message.Type = "Fail";
-                await _context.SaveChangesAsync();
-                return Ok(new { message = "Message marked as fail successfully." });
-            }
-            catch (System.Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while marking the message as fail: " + ex.Message });
+                return StatusCode(500, new { message = $"Lỗi khi tìm kiếm: {ex.Message}" });
             }
         }
     }
 }
+
