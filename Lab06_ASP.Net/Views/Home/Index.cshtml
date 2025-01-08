@@ -131,10 +131,10 @@
                 </div>
                 <div class="flex-1 rounded-xl p-12 pb-14 m-5 bg-black bg-opacity-50 tm-item-container">
                     <form id="orderForm" class="text-lg">
-                        <input type="text" name="name" class="input w-full bg-black border-b bg-opacity-0 text-white px-0 py-4 mb-4 tm-border-gold" placeholder="Name" required="" />
-                        <input type="email" name="email" class="input w-full bg-black border-b bg-opacity-0 text-white px-0 py-4 mb-4 tm-border-gold" placeholder="Email" required="" />
-                        <input type="tel" name="tel" class="input w-full bg-black border-b bg-opacity-0 text-white px-0 py-4 mb-4 tm-border-gold" placeholder="Phone Number" required pattern="[0-9]{10,12}" inputmode="numeric" />
-                        <textarea rows="6" name="message" class="input w-full bg-black border-b bg-opacity-0 text-white px-0 py-4 mb-4 tm-border-gold" placeholder="Message..." required=""></textarea>
+                        <input type="text" id="name" name="name" class="input w-full bg-black border-b bg-opacity-0 text-white px-0 py-4 mb-4 tm-border-gold" placeholder="Name" required="" />
+                        <input type="email" id="email" name="email" class="input w-full bg-black border-b bg-opacity-0 text-white px-0 py-4 mb-4 tm-border-gold" placeholder="Email" required="" />
+                        <input type="tel" id="tel" name="tel" class="input w-full bg-black border-b bg-opacity-0 text-white px-0 py-4 mb-4 tm-border-gold" placeholder="Phone Number" required pattern="[0-9]{10,12}" inputmode="numeric" />
+                        <textarea rows="6" id="message" name="message" class="input w-full bg-black border-b bg-opacity-0 text-white px-0 py-4 mb-4 tm-border-gold" placeholder="Message..." required=""></textarea>
                         <div class="text-right">
                             <button type="button" id="submitBtn" class="text-white hover:text-yellow-500 transition">Send it</button>
                         </div>
@@ -155,43 +155,55 @@
     <script src="/vendor/js/jquery.singlePageNav.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('#submitBtn').click(function (event) {
-                var form = $('#orderForm')[0];
-                if (form.checkValidity()) {
-                    // Xử lý logic khi form hợp lệ
-                    var name = $('[name="name"]').val();
-                    var email = $('[name="email"]').val();
-                    var message = $('[name="message"]').val();
-                    var phonenumber = $('[name="tel"]').val();
+    $("#submitBtn").click(function (event) {
+        event.preventDefault(); // Ngăn chặn submit mặc định
 
-                    var orderData = {
-                        Name: name,
-                        Email: email,
-                        Message: message,
-                        PhoneNumber: phonenumber,
-                        Type: "undone"
-                    };
-                    console.log(orderData);
-                    $.ajax({
-                        url: '/admin/home/createorder',
-                        type: 'POST',
-                        dataType: 'json',
-                        data: orderData,
-                        success: function (response) {
-                            alert('Order created successfully.');
-                            form.reset();
-                            showOrderList();
-                        },
-                        error: function (xhr, status, error) {
-                            alert('An error occurred while creating the order.');
-                        }
-                    });
-                } else {
-                    // Xử lý logic khi form không hợp lệ
-                    form.reportValidity();
+        var form = $("#orderForm")[0];
+        if (form.checkValidity()) {
+            var name = $("#name").val();
+            var email = $("#email").val();
+            var message = $("#message").val();
+            var phonenumber = $("#tel").val();
+
+            var orderData = {
+                CustomerName: name,
+                CustomerEmail: email,
+                Description: message,
+                CustomerPhoneNumber: phonenumber,
+                Type: "undone"
+            };
+
+            console.log(orderData);
+
+            $.ajax({
+                url: "/Admin/Messages/CreateMessage",
+                type: "POST",
+                dataType: "json",
+                data: orderData, // Chuyển đổi object thành JSON string
+                success: function (response) {
+                    alert("Message send successfully.");
+                    form.reset(); // Reset form sau khi thành công
+                    // Xử lý response từ server nếu cần (ví dụ: hiển thị thông báo chi tiết)
+                    //console.log(response);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error creating order:", xhr, status, error);
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        var errorList = "<ul>";
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorList += "<li>" + value + "</li>";
+                        });
+                        errorList += "</ul>";
+                        $("#errorMessages").html(errorList).show(); // Hiển thị lỗi từ server
+                    } else {
+                        alert("An error occurred while creating the order."); // Thông báo lỗi chung
+                    }
                 }
-                event.preventDefault();
             });
+        } else {
+            form.reportValidity(); // Chỉ gọi khi form không hợp lệ
+        }
+    });
         });
 
         function checkAndShowHideMenu() {
