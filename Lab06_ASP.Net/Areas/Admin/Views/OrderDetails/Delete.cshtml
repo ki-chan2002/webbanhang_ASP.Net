@@ -43,9 +43,9 @@
         </dd>
     </dl>
     
-    <form asp-action="Delete">
+    <form asp-area="Admin" asp-controller="OrderDetails" asp-action="Delete">
         <input type="hidden" asp-for="OrderDetailID" />
         <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
+        <a asp-area="Admin" asp-controller="OrderDetails" asp-action="Index">Back to List</a>
     </form>
 </div>

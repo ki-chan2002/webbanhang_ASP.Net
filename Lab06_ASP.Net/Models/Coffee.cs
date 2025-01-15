@@ -57,6 +57,7 @@ namespace Lab06_ASP.Net.Models
         public int CoffeeID { get; set; }
 
         [ForeignKey("CoffeeID")]
+        [ValidateNever]
         public virtual Coffee Coffee { get; set; }
         public int Quantity { get; set; }
         public decimal Price { get; set; }
@@ -70,34 +71,34 @@ namespace Lab06_ASP.Net.Models
         public int OrderID { get; set; }
 
         [Required]
-        public DateTime OrderDate { get; set; }
+        public DateTime OrderDate { get; set; } = DateTime.Now; // Gán giá trị mặc định
 
         [Required]
         [Column(TypeName = "decimal(18, 2)")]
-        [Range(0, double.MaxValue, ErrorMessage = "Total amount must be a positive value.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Tổng tiền phải là một giá trị dương.")]
         public decimal TotalAmount { get; set; }
 
         [Required]
-        public OrderStatus OrderStatus { get; set; }
-
-        [ValidateNever]
-        public virtual ICollection<OrderDetail> OrderDetail { get; set; } = new List<OrderDetail>();
+        public OrderStatus OrderStatus { get; set; } = OrderStatus.Pending; // Gán giá trị mặc định
 
         [Required]
-        [StringLength(100, ErrorMessage = "Customer name cannot exceed 100 characters.")]
+        [StringLength(100, ErrorMessage = "Tên khách hàng không được vượt quá 100 ký tự.")]
         public string CustomerName { get; set; }
 
         [Required]
-        [EmailAddress(ErrorMessage = "Invalid email address.")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
         public string CustomerEmail { get; set; }
 
         [Required]
-        [Phone(ErrorMessage = "Invalid phone number.")]
+        [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
         public string CustomerPhone { get; set; }
 
         [Required]
-        [StringLength(500, ErrorMessage = "Delivery address cannot exceed 500 characters.")]
+        [StringLength(500, ErrorMessage = "Địa chỉ giao hàng không được vượt quá 500 ký tự.")]
         public string DeliveryAddress { get; set; }
+
+        [ValidateNever]
+        public virtual ICollection<OrderDetail> OrderDetail { get; set; } = new List<OrderDetail>();
     }
 
 
@@ -125,6 +126,7 @@ namespace Lab06_ASP.Net.Models
         [Required]
         public int CoffeeID { get; set; }
 
+        [ValidateNever]
         [ForeignKey("CoffeeID")]
         public virtual Coffee Coffee { get; set; }
 
@@ -142,11 +144,36 @@ namespace Lab06_ASP.Net.Models
         public string Size { get; set; }
     }
 
+    public class CartViewModel
+    {
+        public List<CartItem> Values { get; set; }
+    }
+
+    public class OrderInputModel
+    {
+        [Required(ErrorMessage = "Vui lòng nhập tên khách hàng.")]
+        [StringLength(100, ErrorMessage = "Tên khách hàng không được vượt quá 100 ký tự.")]
+        public string CustomerName { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập email.")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
+        public string CustomerEmail { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
+        [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
+        public string CustomerPhone { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập địa chỉ giao hàng.")]
+        [StringLength(500, ErrorMessage = "Địa chỉ giao hàng không được vượt quá 500 ký tự.")]
+        public string DeliveryAddress { get; set; }
+    }
+
     public class IndexViewModel
     {
         public List<Category> Categories { get; set; }
         public List<Coffee> Coffees { get; set; }
     }
+
     public class MyDBContext : DbContext
     {
         public MyDBContext(DbContextOptions<MyDBContext> options) : base(options)

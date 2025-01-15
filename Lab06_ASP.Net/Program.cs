@@ -21,6 +21,12 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
 });
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 builder.Services.AddSession();
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -43,6 +49,18 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
+
+
+app.MapAreaControllerRoute(
+name: "AdminArea",
+areaName: "Admin",
+pattern: "Admin/{controller=Home}/{action=Index}/{id?}"
+);
+
+app.MapControllerRoute(
+name: "default",
+pattern: "{controller=Home}/{action=Index}/{id?}"
+);
 
 app.UseEndpoints(endpoints =>
 {

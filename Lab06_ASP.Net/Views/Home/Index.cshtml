@@ -69,19 +69,25 @@
                 <div class="flex-1 m-5 rounded-xl px-4 py-6 sm:px-8 sm:py-10 tm-bg-brown tm-item-container">
                     @foreach (var coffee in Model)
                     {
-                        {
-                            <div class="flex items-start mb-6 tm-menu-item">
-                                <img src="/vendor/img/@coffee.ImagePath" alt="Image" class="rounded-md" style="max-height: 100px; max-width:100px">
-                                <div class="ml-3 sm:ml-6">
-                                    <h3 class="text-lg sm:text-xl mb-2 sm:mb-3 tm-text-yellow">@coffee.CoffeeName</h3>
-                                    <div class="text-white text-md sm:text-lg font-light mb-1">Small: $@coffee.S_Price</div>
-                                    <div class="text-white text-md sm:text-lg font-light">Large: $@coffee.L_Price</div>
-                                    <div class="description-box hidden">
-                                        @coffee.Description
-                                    </div>
+                        <div class="flex items-start mb-6 tm-menu-item">
+                            <img src="/vendor/img/@coffee.ImagePath" alt="Image" class="rounded-md" style="max-height: 100px; max-width:100px">
+                            <div class="ml-3 sm:ml-6">
+                                <h3 class="text-lg sm:text-xl mb-3 tm-text-yellow">@coffee.CoffeeName</h3>
+                                <div class="text-white text-sm sm:text-lg font-light mb-1">Small: $@coffee.S_Price</div>
+                                <button class="btn btn-primary btn-sm"
+                                        onclick="addToCart('@coffee.CoffeeID', 'Small', @coffee.S_Price)">
+                                    Add Small to Cart
+                                </button>
+                                <div class="text-white text-sm sm:text-lg font-light">Large: $@coffee.L_Price</div>
+                                <button class="btn btn-primary btn-sm"
+                                        onclick="addToCart('@coffee.CoffeeID', 'Large', @coffee.L_Price)">
+                                    Add Large to Cart
+                                </button>
+                                <div class="description-box hidden">
+                                    @coffee.Description
                                 </div>
                             </div>
-                        }
+                        </div>
                     }
                 </div>
                 <div class="flex-1 m-5 rounded-xl px-4 py-6 sm:px-8 sm:py-10 tm-bg-brown tm-item-container">
@@ -155,7 +161,7 @@
     <script src="/vendor/js/jquery.singlePageNav.min.js"></script>
     <script>
         $(document).ready(function () {
-    $("#submitBtn").click(function (event) {
+        $("#submitBtn").click(function (event) {
         event.preventDefault(); // Ngăn chặn submit mặc định
 
         var form = $("#orderForm")[0];
@@ -251,6 +257,21 @@
                 });
             });
         });
+
+        function addToCart(coffeeID, size, price) {
+            $.post('/Cart/AddToCart',
+                { CoffeeID: coffeeID, Size: size, Price: price, Quantity: 1 },
+                function (response) {
+                    if (response.success) {
+                        alert('Added to cart successfully!');
+                    } else {
+                        alert('Failed to add to cart. Please try again.');
+                    }
+                }).fail(function () {
+                alert('Error while adding to cart.');
+            });
+        }
+
     </script>
 </body>
 </html>

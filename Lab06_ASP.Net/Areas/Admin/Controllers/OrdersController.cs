@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Lab06_ASP.Net.Models;
+using Newtonsoft.Json;
 
 namespace Lab06_ASP.Net.Areas.Admin.Controllers
 {
@@ -153,5 +154,47 @@ namespace Lab06_ASP.Net.Areas.Admin.Controllers
         {
             return _context.Orders.Any(e => e.OrderID == id);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateOrder([FromBody] OrderInputModel input)
+        {
+            var cartJson = HttpContext.Session.GetString("Cart");
+            if (string.IsNullOrEmpty(cartJson))
+            {
+                return BadRequest(new { message = "Giỏ hàng trống." });
+            }
+
+            var cart = JsonConvert.DeserializeObject<List<CartItem>>(cartJson);
+            if (cart == null || !cart.Any())
+            {
+                return BadRequest(new { message = "Giỏ hàng trống." });
+            }
+
+            var order = new Order
+            {
+                CustomerName = input.CustomerName,
+                CustomerEmail = input.CustomerEmail,
+                CustomerPhone = input.CustomerPhone,
+                DeliveryAddress = input.DeliveryAddress,
+                TotalAmount = cart.Sum(item => item.Quantity * item.Price), // Tính tổng tiền
+                OrderDetail = cart.Select(x => new OrderDetail
+                {
+                    CoffeeID = x.CoffeeID,
+                    Size = x.Size,
+                    Quantity = x.Quantity,
+                    Price = x.Price
+                }).ToList()
+            };
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            HttpContext.Session.Remove("Cart"); // Xóa giỏ hàng sau khi đặt hàng thành công
+
+            return Ok(new { message = "Đặt hàng thành công!" });
+            
+        }
     }
+
 }
+

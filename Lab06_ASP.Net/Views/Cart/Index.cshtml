@@ -1,0 +1,153 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Lab06_ASP.Net</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Lab06_ASP.Net.styles.css" asp-append-version="true" />
+</head>
+<div class="container">
+    <h2>Thông tin khách hàng</h2>
+    <form id="orderForm">
+        <div class="form-group">
+            <label for="customerName">Tên:</label>
+            <input type="text" class="form-control" id="customerName" name="CustomerName" required>
+        </div>
+        <div class="form-group">
+            <label for="customerEmail">Email:</label>
+            <input type="email" class="form-control" id="customerEmail" name="CustomerEmail" required>
+        </div>
+        <div class="form-group">
+            <label for="customerPhone">Điện thoại:</label>
+            <input type="tel" class="form-control" id="customerPhone" name="CustomerPhone" required>
+        </div>
+        <div class="form-group">
+            <label for="deliveryAddress">Địa chỉ giao hàng:</label>
+            <textarea class="form-control" id="deliveryAddress" name="DeliveryAddress" required></textarea>
+        </div>
+    </form>
+
+    <h2>Giỏ hàng</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Sản phẩm</th>
+                <th>Size</th>
+                <th>Số lượng</th>
+                <th>Giá</th>
+                <th>Thành tiền</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody id="cartTable">
+        </tbody>
+    </table>
+    <button class="btn btn-success" onclick="createOrder()">Đặt hàng</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+    function loadCart() {
+        $.get('/Cart/GetCart')
+            .done(function (data) {
+                console.log("Data received:", data);
+                $('#cartTable').empty(); // Xóa nội dung bảng trước khi thêm dữ liệu mới
+
+                if (data && data.Values && data.Values.$values && Array.isArray(data.Values.$values)) {
+                    if (data.Values.$values.length > 0) { // Kiểm tra mảng có phần tử
+                        data.Values.$values.forEach(function (item) {
+                            var row = $('<tr>');
+                            $('<td>').text(item.Coffee.CoffeeName).appendTo(row);
+                            $('<td>').text(item.Size).appendTo(row);
+                            $('<td>').text(item.Quantity).appendTo(row);
+                            $('<td>').text(item.Price).appendTo(row);
+                            $('<td>').text(item.Quantity * item.Price).appendTo(row);
+                            $('<td>').append(
+                                $('<button>', {
+                                    class: 'btn btn-danger',
+                                    click: function() { removeFromCart(item.CoffeeID, item.Size); }, // Truyền cả size
+                                    text: 'Xóa'
+                                })
+                            ).appendTo(row);
+                            $('#cartTable').append(row);
+                        });
+                    } else {
+                        $('#cartTable').append('<tr><td colspan="6">Không có sản phẩm trong giỏ hàng.</td></tr>');
+                    }
+                }
+                else {
+                    console.error("Data received from /Cart/GetCart is not in the expected format:", data);
+                    $('#cartTable').append('<tr><td colspan="6">Lỗi khi tải giỏ hàng.</td></tr>');
+                }
+            })
+            .fail(function (error) {
+                console.error("Error fetching cart data:", error);
+                $('#cartTable').append('<tr><td colspan="6">Lỗi khi tải giỏ hàng.</td></tr>');
+            });
+    }
+
+    function removeFromCart(coffeeID, size) {
+        $.post('/Cart/RemoveFromCart', { CoffeeID: coffeeID, Size: size }) // Định dạng dữ liệu chính xác
+            .done(function (response) {
+                if (response.success) { // Kiểm tra response.success từ server
+                    console.log("Product removed successfully");
+                    loadCart(); // Gọi loadCart() sau khi xóa thành công
+                } else {
+                    console.error("Failed to remove product:", response.message); // Hiển thị thông báo lỗi từ server (nếu có)
+                    alert("Xóa sản phẩm thất bại. Vui lòng thử lại.");
+                }
+            })
+            .fail(function (error) {
+                console.error("Error communicating with server:", error);
+                alert('Lỗi kết nối đến server.');
+            });
+    }
+
+        function createOrder() {
+            var customerName = $('#customerName').val();
+            var customerEmail = $('#customerEmail').val();
+            var customerPhone = $('#customerPhone').val();
+            var deliveryAddress = $('#deliveryAddress').val();
+
+            if (!customerName || !customerEmail || !customerPhone || !deliveryAddress) {
+                alert("Vui lòng nhập đầy đủ thông tin khách hàng.");
+                return; // Ngăn chặn request nếu thiếu thông tin
+            }
+
+            var orderData = {
+                CustomerName: customerName,
+                CustomerEmail: customerEmail,
+                CustomerPhone: customerPhone,
+                DeliveryAddress: deliveryAddress
+            };
+
+            $.ajax({
+                url: '/Admin/Orders/CreateOrder',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(orderData),
+                success: function (response) {
+                   if (response.message == "Order created successfully") {
+                        alert("Đặt hàng thành công!");
+                        window.location.href = '/Home/Index'; // Chuyển hướng về trang chủ sau khi đặt hàng thành công
+                    } else{
+                        alert(response.message);
+                    }
+                },
+                error: function (error) {
+                    console.error("Lỗi khi đặt hàng:", error);
+                    alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+                }
+            });
+        }
+
+    $(document).ready(function () {
+        loadCart();
+    });
+</script>
+

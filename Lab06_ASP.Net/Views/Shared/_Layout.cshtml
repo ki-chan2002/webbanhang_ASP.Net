@@ -23,7 +23,7 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" href="/admin/home/index">Home</a>
+                            <a class="nav-link text-dark" asp-area="Admin" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -32,7 +32,7 @@
                             <button type="button" id="btnCreateNew" data-toggle="modal" data-target="#exampleModal" class="btn btn-primary btn-md">Create New Coffee</button>
                         </li>
                         <li>
-                            <button type="button" id="btnListOrder" data-toggle="modal" data-target="#exampleModal2" class="btn btn-success btn-md" style="margin-left: 10px">Order</button>
+                            <button type="button" id="btnListOrder" data-toggle="modal" data-target="#exampleModal2" class="btn btn-success btn-md" style="margin-left: 10px">Messages</button>
                         </li>
                     </ul>                  
                         <partial name="_LoginPartial" />                
@@ -55,7 +55,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2023 - Lab06_ASP.Net - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2024 - T.K.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/js/site.js" asp-append-version="true"></script>
