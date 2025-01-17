@@ -339,19 +339,26 @@
         function openReportTab(url) {
             window.open(url, '_blank');
         }
+
         function showMessageList() {
             $("#messageTable tbody").empty();
 
             $.ajax({
-                url: "/Admin/Messages/ShowMessageList", // Kiểm tra lại URL này
+                url: "/Admin/Messages/ShowMessageList", // Kiểm tra URL này
                 type: "GET",
                 dataType: "json", // Bắt buộc để jQuery tự động parse JSON
                 success: function (data) {
-                    if (data && data.$values && Array.isArray(data.$values)) { // Kiểm tra data có tồn tại và có dữ liệu
-                        data.$values.forEach(AppendMessage);
+                    console.log(data); // Kiểm tra cấu trúc data
+                    if (data && data.$values && Array.isArray(data.$values)) {
+                        // Lặp qua từng phần tử trong data.$values
+                        data.$values.forEach(function (message) {
+                            AppendMessage(message); // Gọi hàm AppendMessage với từng đối tượng
+                        });
                     } else {
                         // Xử lý trường hợp không có dữ liệu
-                        $("#messageTable tbody").append("<tr><td colspan='5'>No messages found.</td></tr>");
+                        $("#messageTable tbody").append(
+                            "<tr><td colspan='5'>No messages found.</td></tr>"
+                        );
                     }
                 },
                 error: function (xhr, status, error) {
@@ -359,9 +366,9 @@
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         alert(xhr.responseJSON.message); // Hiển thị thông báo lỗi từ server (nếu có)
                     } else {
-                        alert("An error occurred while fetching messages."); // Thông báo lỗi chung
+                        alert("An error occurred while fetching messages.");
                     }
-                }
+                },
             });
         }
 
@@ -402,11 +409,11 @@
 
         function AppendMessage(message) {
             let row = `<tr>
-                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.messageID}</td>
-                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.customerName}</td>
-                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.customerPhoneNumber}</td>
-                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.customerEmail}</td>
-                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.description}</td>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.MessageID}</td>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.CustomerName}</td>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.CustomerPhoneNumber}</td>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.CustomerEmail}</td>
+                           <td class="${message.type === 'done' ? 'text-success' : (message.type === 'fail' ? 'text-danger' : '')}">${message.Description}</td>
                            
                        </tr>`;
             $('#messageTable tbody').append(row);

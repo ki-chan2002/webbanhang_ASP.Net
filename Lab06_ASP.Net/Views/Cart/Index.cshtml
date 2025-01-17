@@ -56,38 +56,71 @@
         $.get('/Cart/GetCart')
             .done(function (data) {
                 console.log("Data received:", data);
-                $('#cartTable').empty(); // Xóa nội dung bảng trước khi thêm dữ liệu mới
+                $('#cartTable').empty();
 
-                if (data && data.Values && data.Values.$values && Array.isArray(data.Values.$values)) {
-                    if (data.Values.$values.length > 0) { // Kiểm tra mảng có phần tử
-                        data.Values.$values.forEach(function (item) {
-                            var row = $('<tr>');
-                            $('<td>').text(item.Coffee.CoffeeName).appendTo(row);
-                            $('<td>').text(item.Size).appendTo(row);
-                            $('<td>').text(item.Quantity).appendTo(row);
-                            $('<td>').text(item.Price).appendTo(row);
-                            $('<td>').text(item.Quantity * item.Price).appendTo(row);
-                            $('<td>').append(
-                                $('<button>', {
-                                    class: 'btn btn-danger',
-                                    click: function() { removeFromCart(item.CoffeeID, item.Size); }, // Truyền cả size
-                                    text: 'Xóa'
-                                })
-                            ).appendTo(row);
-                            $('#cartTable').append(row);
-                        });
-                    } else {
-                        $('#cartTable').append('<tr><td colspan="6">Không có sản phẩm trong giỏ hàng.</td></tr>');
-                    }
-                }
-                else {
-                    console.error("Data received from /Cart/GetCart is not in the expected format:", data);
-                    $('#cartTable').append('<tr><td colspan="6">Lỗi khi tải giỏ hàng.</td></tr>');
+                if (data && data.Values && data.Values.$values && Array.isArray(data.Values.$values) && data.Values.$values.length > 0) {
+                    data.Values.$values.forEach(function (item) {
+                        var row = $('<tr>');
+                        $('<td>').text(item.Coffee.CoffeeName).appendTo(row);
+                        $('<td>').text(item.Size).appendTo(row);
+
+                        // Thay đổi ở đây: Tạo input number
+                        var quantityInput = $('<input>', {
+                            type: 'number',
+                            class: 'form-control quantity-input', // Thêm class để dễ dàng select sau này
+                            value: item.Quantity,
+                            min: 1, // Số lượng tối thiểu là 1
+                            'data-coffee-id': item.CoffeeID, // Lưu CoffeeID vào data attribute
+                            'data-size': item.Size,
+                            change: function () { // Lắng nghe sự kiện change
+                                updateQuantity(item.CoffeeID, item.Size, $(this).val()); // Gọi hàm cập nhật số lượng
+                                updateTotalPrice(row, item.Price, $(this).val());
+                            }
+                        }).css("width","70px");
+                        $('<td>').append(quantityInput).appendTo(row);
+
+                        $('<td>').text(item.Price).appendTo(row);
+
+                        // Thay đổi ở đây: Hiển thị tổng giá ban đầu
+                        var totalPrice = item.Quantity * item.Price;
+                        $('<td class="total-price">').text(totalPrice).appendTo(row);
+
+
+                        $('<td>').append(
+                            $('<button>', {
+                                class: 'btn btn-danger',
+                                click: function() { removeFromCart(item.CoffeeID, item.Size); },
+                                text: 'Xóa'
+                            })
+                        ).appendTo(row);
+                        $('#cartTable').append(row);
+                    });
+                } else {
+                    $('#cartTable').append('<tr><td colspan="6">Không có sản phẩm trong giỏ hàng.</td></tr>');
                 }
             })
             .fail(function (error) {
                 console.error("Error fetching cart data:", error);
                 $('#cartTable').append('<tr><td colspan="6">Lỗi khi tải giỏ hàng.</td></tr>');
+            });
+    }
+
+    function updateTotalPrice(row, price, quantity) {
+        let totalPrice = price * quantity;
+        row.find('.total-price').text(totalPrice);
+    }
+
+    function updateQuantity(coffeeID, size, quantity) {
+        $.post('/Cart/UpdateQuantity', { CoffeeID: coffeeID, Size: size, Quantity: quantity })
+            .done(function (response) {
+                if (!response.success) {
+                    alert(response.message);
+                    loadCart();
+                }
+            })
+            .fail(function (error) {
+                console.error("Error communicating with server:", error);
+                alert('Lỗi kết nối đến server.');
             });
     }
 
@@ -134,8 +167,7 @@
                 success: function (response) {
                    if (response.message == "Order created successfully") {
                         alert("Đặt hàng thành công!");
-                        window.location.href = '/Home/Index'; // Chuyển hướng về trang chủ sau khi đặt hàng thành công
-                    } else{
+                        window.location.reload(true);
                         alert(response.message);
                     }
                 },

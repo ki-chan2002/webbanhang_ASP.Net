@@ -84,7 +84,40 @@ namespace Lab06_ASP.Net.Controllers
             return Json(new { success = true });
         }
 
+        [HttpPost]
+        public IActionResult UpdateQuantity(int CoffeeID, string Size, int Quantity)
+        {
+            try
+            {
+                var cartJson = HttpContext.Session.GetString("Cart");
+                if (string.IsNullOrEmpty(cartJson))
+                {
+                    return Json(new { success = false, message = "Giỏ hàng trống." });
+                }
 
+                var cartItems = JsonConvert.DeserializeObject<List<CartItem>>(cartJson);
+                if (cartItems == null)
+                {
+                    return Json(new { success = false, message = "Không thể đọc giỏ hàng." });
+                }
+
+                var itemToUpdate = cartItems.FirstOrDefault(item => item.CoffeeID == CoffeeID && item.Size == Size);
+                if (itemToUpdate != null)
+                {
+                    itemToUpdate.Quantity = Quantity;
+                    HttpContext.Session.SetString("Cart", JsonConvert.SerializeObject(cartItems));
+                    return Json(new { success = true });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Không tìm thấy sản phẩm trong giỏ hàng." });
+                }
+            }
+            catch (System.Exception ex)
+            {
+                return Json(new { success = false, message = $"Lỗi cập nhật số lượng: {ex.Message}" });
+            }
+        }
 
         [HttpPost]
         public IActionResult RemoveFromCart(int CoffeeID, string Size)
